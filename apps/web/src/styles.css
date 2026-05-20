@@ -1,0 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --bg: #f8f5ff;
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-strong: #ffffff;
+  --text: #09111f;
+  --muted: #53627b;
+  --outline: rgba(9, 17, 31, 0.08);
+}
+
+.dark {
+  color-scheme: dark;
+  --bg: #08111f;
+  --surface: rgba(9, 17, 31, 0.72);
+  --surface-strong: #101a2b;
+  --text: #eff5ff;
+  --muted: #a8b6cf;
+  --outline: rgba(255, 255, 255, 0.08);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-[var(--bg)] font-body text-[var(--text)] antialiased;
+  background-image:
+    radial-gradient(circle at top left, rgba(111, 76, 255, 0.1), transparent 24%),
+    radial-gradient(circle at top right, rgba(255, 191, 144, 0.2), transparent 26%),
+    radial-gradient(circle at 20% 100%, rgba(93, 212, 209, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(255, 250, 247, 0.82), rgba(244, 241, 255, 0.96));
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.glass-panel {
+  @apply border border-white/50 bg-white/70 backdrop-blur-xl dark:border-white/10 dark:bg-white/5;
+}
+
+.page-shell {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.section-gap {
+  @apply py-16 sm:py-20;
+}
+
+.admin-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(91, 109, 153, 0.32);
+  border-radius: 999px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}

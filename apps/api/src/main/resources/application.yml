@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: conference-platform-api
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/scinexa_conferences}
+      auto-index-creation: true
+
+server:
+  port: ${PORT:8080}
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:scinexa-dev-jwt-secret-key-please-change-2026}
+    access-token-expiration-ms: 3600000
+    refresh-token-expiration-ms: 604800000
+
+bootstrap:
+  admin:
+    enabled: ${DEV_ADMIN_ENABLED:true}
+    full-name: ${DEV_ADMIN_FULL_NAME:Scinexa Admin}
+    email: ${DEV_ADMIN_EMAIL:admin@scinexa.local}
+    password: ${DEV_ADMIN_PASSWORD:Admin@12345}
+    reset-password-on-startup: ${DEV_ADMIN_RESET_PASSWORD_ON_STARTUP:true}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
