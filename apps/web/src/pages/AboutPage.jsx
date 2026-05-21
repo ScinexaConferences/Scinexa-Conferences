@@ -2,8 +2,9 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { SectionHeading } from "../components/SectionHeading";
+import { defaultContentSettings } from "../data/contentDefaults";
 import { defaultHomeHeroSettings } from "../data/homeHeroDefaults";
-import { getHomeHeroSettings } from "../services/siteSettingsService";
+import { getContentSettings, getHomeHeroSettings } from "../services/siteSettingsService";
 
 export function AboutPage() {
   const { data: heroSettings } = useQuery({
@@ -12,6 +13,13 @@ export function AboutPage() {
     initialData: defaultHomeHeroSettings,
     staleTime: 30000
   });
+  const { data: contentSettings } = useQuery({
+    queryKey: ["content-settings"],
+    queryFn: getContentSettings,
+    initialData: defaultContentSettings,
+    staleTime: 30000
+  });
+  const aboutContent = contentSettings?.about ?? defaultContentSettings.about;
 
   return (
     <section className="section-gap">
@@ -29,7 +37,7 @@ export function AboutPage() {
 
             <div className="relative overflow-hidden rounded-[2.3rem] border border-black/5 bg-[#0b0818] shadow-[0_30px_80px_rgba(15,21,55,0.18)] dark:border-white/10">
               <img
-                src="https://images.unsplash.com/photo-1579165466741-7f35e4755660?auto=format&fit=crop&w=1200&q=80"
+                src={aboutContent.image}
                 alt="Laboratory research and scientific collaboration visual"
                 className="h-[420px] w-full object-cover sm:h-[520px]"
               />
@@ -37,9 +45,9 @@ export function AboutPage() {
 
               <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-7">
                 <div className="max-w-xs rounded-[1.6rem] border border-white/12 bg-white/10 p-4 text-white backdrop-blur-md">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#a8d8ff]">Host City</p>
-                  <p className="mt-2 font-display text-2xl font-bold">{heroSettings.locationText}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-200">{heroSettings.dateText}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#a8d8ff]">{aboutContent.overlayLabel}</p>
+                  <p className="mt-2 font-display text-2xl font-bold">{aboutContent.overlayTitle || heroSettings.locationText}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-200">{aboutContent.overlaySubtitle || heroSettings.dateText}</p>
                 </div>
               </div>
             </div>
@@ -52,30 +60,23 @@ export function AboutPage() {
             transition={{ duration: 0.6, delay: 0.08 }}
           >
             <SectionHeading
-              eyebrow="About This Conference"
-              title="A sharper scientific meeting experience built for serious collaboration"
-              description="Inspired by premium congress layouts, this section frames the event as more than a registration page. It presents the conference as a destination for research exchange, practical insight, and long-tail professional relationships."
+              eyebrow={aboutContent.eyebrow}
+              title={aboutContent.title}
+              description={aboutContent.description}
             />
 
             <div className="mt-8 space-y-6 text-base leading-8 text-slate-600 dark:text-slate-300">
-              <p>
-                {heroSettings.title} is designed to bring together clinicians, microbiologists, infectious disease
-                specialists, and translational researchers in a setting that feels focused, credible, and globally
-                connected.
-              </p>
-              <p>
-                Across the program, delegates can move between keynote thinking, evidence-led breakout sessions,
-                sponsor interaction, and peer conversations that carry useful ideas back into hospitals, laboratories,
-                universities, and public health teams.
-              </p>
+              {aboutContent.paragraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph.replace("3rd International Congress on Clinical Microbiology and Infectious Diseases", heroSettings.title)}</p>
+              ))}
             </div>
 
             <div className="mt-8">
               <Link
-                to="/registration"
+                to={aboutContent.ctaTo}
                 className="inline-flex items-center justify-center rounded-full bg-[#261038] px-7 py-3.5 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-[0_18px_34px_rgba(38,16,56,0.18)] transition hover:-translate-y-0.5 hover:bg-[#35124d]"
               >
-                Register Now
+                {aboutContent.ctaLabel}
               </Link>
             </div>
           </motion.div>

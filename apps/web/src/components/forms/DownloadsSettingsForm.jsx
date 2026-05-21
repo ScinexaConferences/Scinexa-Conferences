@@ -5,6 +5,7 @@ import { defaultDownloadsSettings } from "../../data/downloadsDefaults";
 import { getDownloadsSettings, updateDownloadsSettings } from "../../services/siteSettingsService";
 import { getAuthErrorMessage } from "../../utils/auth";
 import { StatusToast } from "../modals/StatusToast";
+import { S3UploadField } from "./S3UploadField";
 
 function cloneDefaults() {
   return {
@@ -42,6 +43,7 @@ export function DownloadsSettingsForm() {
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
   const [editingResourceIndex, setEditingResourceIndex] = useState(null);
   const [draftResource, setDraftResource] = useState(() => createEmptyResource());
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const { data } = useQuery({
     queryKey: ["downloads-settings"],
@@ -349,16 +351,15 @@ export function DownloadsSettingsForm() {
                 </label>
 
                 <div className="grid gap-4 xl:grid-cols-2">
-                  <label className="block space-y-2">
-                    <span className="text-sm font-semibold">Image URL</span>
-                    <input
-                      type="url"
-                      value={draftResource.image}
-                      onChange={(event) => handleDraftChange("image", event.target.value)}
-                      className="w-full rounded-[1.1rem] border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[#6a3fff] focus:ring-4 focus:ring-[#e6dcff] dark:border-white/10 dark:bg-white/[0.04]"
-                      required
-                    />
-                  </label>
+                <S3UploadField
+                  label="Cover image"
+                  value={draftResource.image}
+                  onChange={(value) => handleDraftChange("image", value)}
+                  category="brochures"
+                  placeholder="Paste an image URL or upload a downloads cover image"
+                  onUploadStateChange={setIsUploadingImage}
+                  required
+                />
 
                   <label className="block space-y-2">
                     <span className="text-sm font-semibold">Destination</span>
@@ -386,9 +387,10 @@ export function DownloadsSettingsForm() {
                   </button>
                   <button
                     type="submit"
+                    disabled={isUploadingImage}
                     className="inline-flex items-center justify-center rounded-full bg-[#241133] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(36,17,51,0.2)] transition hover:bg-[#34154b]"
                   >
-                    {editingResourceIndex === null ? "Add resource" : "Save changes"}
+                    {isUploadingImage ? "Uploading..." : editingResourceIndex === null ? "Add resource" : "Save changes"}
                   </button>
                 </div>
               </form>

@@ -3,12 +3,11 @@ import { Link, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import scinexaLogo from "../../assets/scinexa-logo.svg";
 import { moreMenuItems, primaryNavItems } from "../../data/siteMap";
-import { logout, toggleTheme } from "../../store";
+import { toggleTheme } from "../../store";
 
 export function Navbar() {
   const dispatch = useDispatch();
   const theme = useSelector((state) => state.ui.theme);
-  const auth = useSelector((state) => state.auth);
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
@@ -86,61 +85,69 @@ export function Navbar() {
   const moreIsActive = moreMenuItems.some((item) => isActiveItem(item));
 
   return (
-    <header className="sticky top-0 z-40 border-b border-black/5 bg-white/85 backdrop-blur-2xl dark:border-white/10 dark:bg-ink/85">
-      <div className="page-shell py-4">
-        <div className="flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 border-b border-[#e9ddff] bg-[linear-gradient(135deg,rgba(247,241,255,0.96),rgba(255,246,239,0.94))] shadow-[0_10px_36px_rgba(52,27,96,0.08)] backdrop-blur-2xl dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(12,20,34,0.95),rgba(19,27,48,0.92))]">
+      <div className="page-shell py-3 sm:py-4">
+        <div className="flex items-center gap-3 lg:gap-6">
           <Link to="/" className="shrink-0">
-            <img src={scinexaLogo} alt="Scinexa Conferences" className="h-12 w-auto sm:h-14" />
+            <img src={scinexaLogo} alt="Scinexa Conferences" className="h-11 w-auto sm:h-13 md:h-14" />
           </Link>
 
-          <nav className="hidden items-center gap-2 rounded-full border border-[#ece4ff] bg-white/90 px-3 py-2 shadow-[0_14px_36px_rgba(96,63,163,0.08)] lg:flex dark:border-white/10 dark:bg-white/5">
-            {primaryNavItems.map((item) => (
-              <a key={item.label} href={item.href} onClick={(event) => handleAnchorClick(event, item.href)} className={linkClassName(item)}>
-                {item.label}
-              </a>
-            ))}
-            <div ref={moreMenuRef} className="relative">
-              <button
-                type="button"
-                onClick={() => setMoreMenuOpen((value) => !value)}
-                aria-expanded={moreMenuOpen}
-                className={`${pillClassName(moreIsActive)} inline-flex items-center gap-2`}
-              >
-                More
-                <svg
-                  viewBox="0 0 20 20"
-                  className={`h-4 w-4 fill-none stroke-current stroke-2 transition ${moreMenuOpen ? "rotate-180" : ""}`}
-                  aria-hidden="true"
+          <div className="hidden min-w-0 flex-1 justify-center lg:flex">
+            <nav className="flex w-full max-w-[980px] items-center justify-center gap-2 px-1 py-1">
+              {primaryNavItems.map((item) => (
+                <a key={item.label} href={item.href} onClick={(event) => handleAnchorClick(event, item.href)} className={linkClassName(item)}>
+                  {item.label}
+                </a>
+              ))}
+              <div ref={moreMenuRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setMoreMenuOpen((value) => !value)}
+                  aria-expanded={moreMenuOpen}
+                  className={`${pillClassName(moreIsActive)} inline-flex items-center gap-2`}
                 >
-                  <path d="m5 7.5 5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
+                  More
+                  <svg
+                    viewBox="0 0 20 20"
+                    className={`h-4 w-4 fill-none stroke-current stroke-2 transition ${moreMenuOpen ? "rotate-180" : ""}`}
+                    aria-hidden="true"
+                  >
+                    <path d="m5 7.5 5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
 
-              {moreMenuOpen ? (
-                <div className="absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 rounded-[1.75rem] border border-[#d9cffd] bg-white p-4 shadow-[0_24px_60px_rgba(63,43,124,0.18)] dark:border-white/10 dark:bg-white">
-                  <div className="grid gap-1">
-                    {moreMenuItems.map((item) => (
-                      <a
-                        key={item.label}
-                        href={item.href}
-                        onClick={(event) => handleAnchorClick(event, item.href)}
-                        className="rounded-2xl px-4 py-3 text-left text-sm font-semibold text-[#241457] transition hover:bg-[#f5efff] dark:text-[#241457] dark:hover:bg-[#f5efff]"
-                      >
-                        {item.label}
-                      </a>
-                    ))}
+                {moreMenuOpen ? (
+                  <div className="absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 rounded-[1.75rem] border border-[#d9cffd] bg-white p-4 shadow-[0_24px_60px_rgba(63,43,124,0.18)] dark:border-white/10 dark:bg-white">
+                    <div className="grid gap-1">
+                      {moreMenuItems.map((item) => (
+                        <a
+                          key={item.label}
+                          href={item.href}
+                          onClick={(event) => handleAnchorClick(event, item.href)}
+                          className="rounded-2xl px-4 py-3 text-left text-sm font-semibold text-[#241457] transition hover:bg-[#f5efff] dark:text-[#241457] dark:hover:bg-[#f5efff]"
+                        >
+                          {item.label}
+                        </a>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ) : null}
-            </div>
-          </nav>
+                ) : null}
+              </div>
+            </nav>
+          </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <Link
+              to="/registration"
+              className="hidden items-center justify-center rounded-full bg-gradient-to-r from-[#5a1cff] via-[#7b31ff] to-[#2c9fff] px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(104,41,255,0.32)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_46px_rgba(104,41,255,0.42)] lg:inline-flex"
+            >
+              Registration
+            </Link>
             <button
               type="button"
               onClick={() => dispatch(toggleTheme())}
               aria-label={theme === "light" ? "Enable dark mode" : "Enable light mode"}
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#eadfff] bg-white text-[#3c237e] shadow-[0_10px_26px_rgba(96,63,163,0.12)] transition hover:-translate-y-0.5 dark:border-white/15 dark:bg-white/5 dark:text-white"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#eadfff] bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(247,240,255,0.92))] text-[#3c237e] shadow-[0_10px_26px_rgba(96,63,163,0.12)] transition hover:-translate-y-0.5 dark:border-white/15 dark:bg-white/5 dark:text-white"
             >
               {theme === "light" ? (
                 <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-2" aria-hidden="true">
@@ -153,43 +160,11 @@ export function Navbar() {
                 </svg>
               )}
             </button>
-            {auth.isAuthenticated ? (
-              <>
-                <Link
-                  to={auth.user?.roles?.includes("ADMIN") ? "/admin" : "/dashboard"}
-                  className="hidden rounded-full border border-[#eadfff] bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-[#31186d] shadow-[0_10px_26px_rgba(96,63,163,0.08)] transition hover:-translate-y-0.5 sm:inline-flex dark:border-white/15 dark:bg-white dark:text-[#31186d]"
-                >
-                  {auth.user?.roles?.includes("ADMIN") ? "Admin" : "Dashboard"}
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => dispatch(logout())}
-                  className="hidden rounded-full bg-gradient-to-r from-[#5828ff] to-[#6f45ff] px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-[0_18px_34px_rgba(98,63,176,0.28)] transition hover:-translate-y-0.5 sm:inline-flex"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="hidden rounded-full border border-[#eadfff] bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-[#31186d] shadow-[0_10px_26px_rgba(96,63,163,0.08)] transition hover:-translate-y-0.5 sm:inline-flex dark:border-white/15 dark:bg-white dark:text-[#31186d]"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="hidden rounded-full bg-gradient-to-r from-[#5828ff] to-[#6f45ff] px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-[0_18px_34px_rgba(98,63,176,0.28)] transition hover:-translate-y-0.5 sm:inline-flex"
-                >
-                  Sign up
-                </Link>
-              </>
-            )}
             <button
               type="button"
               onClick={() => setMobileOpen((value) => !value)}
               aria-label="Toggle navigation menu"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#eadfff] bg-white text-[#3c237e] lg:hidden dark:border-white/15 dark:bg-white/5 dark:text-white"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#eadfff] bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(247,240,255,0.92))] text-[#3c237e] lg:hidden dark:border-white/15 dark:bg-white/5 dark:text-white"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-2" aria-hidden="true">
                 <path d={mobileOpen ? "M6 6l12 12M18 6 6 18" : "M4 7h16M4 12h16M4 17h16"} strokeLinecap="round" />
@@ -199,8 +174,14 @@ export function Navbar() {
         </div>
 
         {mobileOpen ? (
-          <div className="mt-4 rounded-[2rem] border border-[#ece4ff] bg-white p-4 shadow-[0_18px_44px_rgba(96,63,163,0.16)] lg:hidden dark:border-white/10 dark:bg-white">
+          <div className="mt-4 rounded-[2rem] border border-[#ece4ff] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,240,255,0.92))] p-4 shadow-[0_18px_44px_rgba(96,63,163,0.16)] lg:hidden dark:border-white/10 dark:bg-white">
             <nav className="grid gap-2">
+              <Link
+                to="/registration"
+                className="mb-2 inline-flex w-full items-center justify-center rounded-[1.3rem] bg-gradient-to-r from-[#5a1cff] via-[#7b31ff] to-[#2c9fff] px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(104,41,255,0.32)]"
+              >
+                Registration
+              </Link>
               {primaryNavItems.map((item) => (
                 <a key={item.label} href={item.href} onClick={(event) => handleAnchorClick(event, item.href)} className={linkClassName(item)}>
                   {item.label}
@@ -236,38 +217,6 @@ export function Navbar() {
                   </div>
                 ) : null}
               </div>
-              {auth.isAuthenticated ? (
-                <>
-                  <Link
-                    to={auth.user?.roles?.includes("ADMIN") ? "/admin" : "/dashboard"}
-                    className="mt-2 inline-flex justify-center rounded-full border border-[#eadfff] bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-[#31186d]"
-                  >
-                    {auth.user?.roles?.includes("ADMIN") ? "Admin" : "Dashboard"}
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => dispatch(logout())}
-                    className="mt-2 inline-flex justify-center rounded-full bg-gradient-to-r from-[#5828ff] to-[#6f45ff] px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="mt-2 inline-flex justify-center rounded-full border border-[#eadfff] bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-[#31186d]"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="mt-2 inline-flex justify-center rounded-full bg-gradient-to-r from-[#5828ff] to-[#6f45ff] px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white"
-                  >
-                    Sign up
-                  </Link>
-                </>
-              )}
             </nav>
           </div>
         ) : null}

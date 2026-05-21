@@ -45,6 +45,8 @@ public class AuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
+        ensureUserRoles(user);
+
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid credentials");
         }
@@ -55,6 +57,8 @@ public class AuthService {
     public AuthResponse updateProfile(String email, UpdateProfileRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("User not found"));
+
+        ensureUserRoles(user);
 
         String normalizedEmail = request.email().trim().toLowerCase();
 
@@ -72,6 +76,8 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("User not found"));
 
+        ensureUserRoles(user);
+
         if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
             throw new BadCredentialsException("Current password is incorrect");
         }
@@ -81,10 +87,18 @@ public class AuthService {
     }
 
     private AuthResponse buildAuthResponse(User user) {
+        ensureUserRoles(user);
         Set<String> roles = user.getRoles().stream().map(Enum::name).collect(Collectors.toSet());
         String accessToken = jwtService.generateAccessToken(user.getEmail(), Map.of("roles", roles));
         String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
         return new AuthResponse(accessToken, refreshToken, user.getEmail(), user.getFullName(), roles);
+    }
+
+    private void ensureUserRoles(User user) {
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            user.setRoles(Set.of(Role.ATTENDEE));
+            userRepository.save(user);
+        }
     }
 }

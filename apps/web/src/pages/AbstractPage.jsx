@@ -1,50 +1,19 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { sessionsCatalog } from "../data/mockData";
-
-const submissionTopics = [
-  "Microbial Pathogenesis",
-  "Diagnostic Microbiology",
-  "Infectious Diseases",
-  "Antibiotic Resistance",
-  "Viral Genomics",
-  "Clinical Immunology",
-  "Biofilms & Quorum Sensing",
-  "Zoonotic Diseases",
-  "Mycology & Parasitology",
-  "Public Health Microbiology"
-];
-
-const countries = [
-  "Singapore",
-  "India",
-  "United States",
-  "United Kingdom",
-  "France",
-  "Germany",
-  "Australia",
-  "Japan",
-  "Canada",
-  "United Arab Emirates"
-];
-
-const presentationTypes = [
-  "Oral Presentation",
-  "Poster Presentation",
-  "Workshop Session",
-  "Case Study Forum"
-];
-
-const authorTitles = ["Dr.", "Prof.", "Mr.", "Ms.", "Mx."];
+import { useQuery } from "@tanstack/react-query";
+import { createAbstractSubmission } from "../services/abstractSubmissionService";
+import { defaultContentSettings } from "../data/contentDefaults";
+import { getContentSettings } from "../services/siteSettingsService";
+import { getAuthErrorMessage } from "../utils/auth";
 
 function countWords(value) {
   return value.trim() ? value.trim().split(/\s+/).length : 0;
 }
 
-export function AbstractPage() {
-  const [form, setForm] = useState({
-    titlePrefix: "Dr.",
-    presentationType: "Oral Presentation",
+function createInitialForm(abstractContent) {
+  return {
+    titlePrefix: abstractContent.authorTitles[0] ?? "Dr.",
+    presentationType: abstractContent.presentationTypes[0] ?? "Oral Presentation",
     firstName: "",
     lastName: "",
     email: "",
@@ -55,14 +24,27 @@ export function AbstractPage() {
     abstractTitle: "",
     sessionTrack: "",
     abstractText: ""
+  };
+}
+
+export function AbstractPage() {
+  const { data: contentSettings } = useQuery({
+    queryKey: ["content-settings"],
+    queryFn: getContentSettings,
+    initialData: defaultContentSettings,
+    staleTime: 30000
   });
+  const abstractContent = contentSettings?.abstractSection ?? defaultContentSettings.abstractSection;
+  const sessionsContent = contentSettings?.sessions ?? defaultContentSettings.sessions;
+  const [form, setForm] = useState(() => createInitialForm(abstractContent));
   const [file, setFile] = useState(null);
+  const [fileInputKey, setFileInputKey] = useState(0);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const wordCount = useMemo(() => countWords(form.abstractText), [form.abstractText]);
-  const sessionTracks = useMemo(() => Array.from(new Set(sessionsCatalog.map((session) => session.title))), []);
+  const sessionTracks = useMemo(() => Array.from(new Set((sessionsContent.sessions ?? []).map((session) => session.title))), [sessionsContent.sessions]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -122,11 +104,32 @@ export function AbstractPage() {
     }
 
     setIsSubmitting(true);
+    const formData = new FormData();
+    formData.append("titlePrefix", form.titlePrefix);
+    formData.append("presentationType", form.presentationType);
+    formData.append("firstName", form.firstName);
+    formData.append("lastName", form.lastName);
+    formData.append("email", form.email);
+    formData.append("phone", form.phone);
+    formData.append("organization", form.organization);
+    formData.append("department", form.department);
+    formData.append("country", form.country);
+    formData.append("abstractTitle", form.abstractTitle);
+    formData.append("sessionTrack", form.sessionTrack);
+    formData.append("abstractText", form.abstractText);
+    formData.append("file", file);
 
-    await new Promise((resolve) => window.setTimeout(resolve, 900));
-
-    setIsSubmitting(false);
-    setSuccess("Abstract submission received successfully. A confirmation email will follow after review.");
+    try {
+      const submission = await createAbstractSubmission(formData);
+      setSuccess(`Abstract ${submission.referenceCode} submitted successfully. The admin dashboard can now review it.`);
+      setForm(createInitialForm(abstractContent));
+      setFile(null);
+      setFileInputKey((current) => current + 1);
+    } catch (submissionError) {
+      setError(getAuthErrorMessage(submissionError));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -141,21 +144,11 @@ export function AbstractPage() {
           >
             <h2 className="font-display text-3xl font-bold text-[#211849] dark:text-white">Abstract Guidelines</h2>
             <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
-              Everything you need for preparing and submitting your abstract is included on this page.
+              {abstractContent.description}
             </p>
 
             <ul className="mt-6 space-y-4 text-sm leading-7 text-slate-700 dark:text-slate-200">
-              {[
-                "Abstract length should not exceed 300 words excluding title and author information.",
-                "Use clear sections: Background, Methods, Results, and Conclusion.",
-                "Title should be concise, sentence case, and centered.",
-                "List all affiliations below author names and mark presenting author with an asterisk.",
-                "Submit in English, using professional scientific terminology only.",
-                "Accepted file formats: DOC, DOCX, or PDF. Maximum file size: 5 MB.",
-                "References should be minimal and follow standard journal format.",
-                "Avoid plagiarism, fabricated data, and unsupported clinical claims.",
-                "All submissions are peer-reviewed and final decisions are shared by email."
-              ].map((item) => (
+              {abstractContent.guidelines.map((item) => (
                 <li key={item} className="flex gap-3">
                   <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#546fff]" />
                   <span>{item}</span>
@@ -170,7 +163,7 @@ export function AbstractPage() {
               </p>
 
               <ul className="mt-5 space-y-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
-                {submissionTopics.map((topic) => (
+                {abstractContent.topics.map((topic) => (
                   <li key={topic} className="flex gap-3">
                     <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#546fff]" />
                     <span>{topic}</span>
@@ -182,12 +175,7 @@ export function AbstractPage() {
             <div className="mt-8">
               <h3 className="font-display text-2xl font-bold text-[#211849] dark:text-white">Before You Submit</h3>
               <ul className="mt-5 space-y-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
-                {[
-                  "Use a descriptive title and keep the abstract below 300 words.",
-                  "Select the nearest scientific track for proper reviewer assignment.",
-                  "Avoid plagiarism and include only validated findings.",
-                  "Upload DOC, DOCX, or PDF format with readable structure."
-                ].map((item) => (
+                {abstractContent.beforeSubmit.map((item) => (
                   <li key={item} className="flex gap-3">
                     <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#546fff]" />
                     <span>{item}</span>
@@ -205,18 +193,18 @@ export function AbstractPage() {
           >
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-coral">Abstract</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-coral">{abstractContent.eyebrow}</p>
                 <h1 className="mt-3 font-display text-4xl font-bold text-[#211849] dark:text-white">
-                  Summary Of Your Presentation
+                  {abstractContent.title}
                 </h1>
               </div>
 
-              <button
-                type="button"
+              <a
+                href={abstractContent.templateTo}
                 className="inline-flex rounded-full border border-[#ead8ff] bg-white px-5 py-3 text-sm font-semibold text-[#5b2dd8] shadow-[0_10px_24px_rgba(96,63,163,0.08)] dark:border-white/10 dark:bg-white/[0.05] dark:text-white"
               >
-                Download Template
-              </button>
+                {abstractContent.templateLabel}
+              </a>
             </div>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
@@ -229,7 +217,7 @@ export function AbstractPage() {
                     onChange={handleChange}
                     className="w-full rounded-[1rem] border border-[#ddd7ff] bg-white px-4 py-3 outline-none transition focus:border-[#6a3fff] focus:ring-4 focus:ring-[#ece4ff] dark:border-white/10 dark:bg-white/[0.04]"
                   >
-                    {authorTitles.map((item) => (
+                    {abstractContent.authorTitles.map((item) => (
                       <option key={item}>{item}</option>
                     ))}
                   </select>
@@ -243,7 +231,7 @@ export function AbstractPage() {
                     onChange={handleChange}
                     className="w-full rounded-[1rem] border border-[#ddd7ff] bg-white px-4 py-3 outline-none transition focus:border-[#6a3fff] focus:ring-4 focus:ring-[#ece4ff] dark:border-white/10 dark:bg-white/[0.04]"
                   >
-                    {presentationTypes.map((item) => (
+                    {abstractContent.presentationTypes.map((item) => (
                       <option key={item}>{item}</option>
                     ))}
                   </select>
@@ -328,7 +316,7 @@ export function AbstractPage() {
                     required
                   >
                     <option value="">Select country</option>
-                    {countries.map((country) => (
+                    {abstractContent.countries.map((country) => (
                       <option key={country} value={country}>
                         {country}
                       </option>
@@ -387,6 +375,7 @@ export function AbstractPage() {
               <label className="space-y-2">
                 <span className="text-sm font-semibold">File Upload (DOC, DOCX, PDF)</span>
                 <input
+                  key={fileInputKey}
                   type="file"
                   accept=".doc,.docx,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
                   onChange={handleFileChange}

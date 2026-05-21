@@ -20,6 +20,7 @@
         <java.version>21</java.version>
         <mapstruct.version>1.6.0</mapstruct.version>
         <jjwt.version>0.12.6</jjwt.version>
+        <aws.sdk.version>2.25.67</aws.sdk.version>
     </properties>
 
     <dependencies>
@@ -67,6 +68,11 @@
             <version>${mapstruct.version}</version>
         </dependency>
         <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>${aws.sdk.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
@@ -107,4 +113,3 @@
         </plugins>
     </build>
 </project>
-

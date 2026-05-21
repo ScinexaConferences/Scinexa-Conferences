@@ -5,9 +5,19 @@ spring:
     mongodb:
       uri: ${MONGODB_URI:mongodb://localhost:27017/scinexa_conferences}
       auto-index-creation: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 server:
   port: ${PORT:8080}
+
+aws:
+  access-key: ${AWS_ACCESS_KEY:}
+  secret-key: ${AWS_SECRET_KEY:}
+  region: ${AWS_REGION:ap-south-1}
+  bucket-name: ${AWS_BUCKET_NAME:}
 
 security:
   jwt:

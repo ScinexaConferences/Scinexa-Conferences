@@ -4,6 +4,7 @@ import { defaultCommitteeSettings } from "../data/committeeDefaults";
 import { defaultDownloadsSettings } from "../data/downloadsDefaults";
 import { defaultHomeHeroSettings } from "../data/homeHeroDefaults";
 import { defaultSpeakersSettings } from "../data/speakersDefaults";
+import { defaultContentSettings } from "../data/contentDefaults";
 
 export async function getHomeHeroSettings() {
   const response = await api.get("/site-settings/home-hero");
@@ -52,5 +53,15 @@ export async function getDownloadsSettings() {
 
 export async function updateDownloadsSettings(payload) {
   const response = await api.put("/site-settings/downloads", payload);
+  return response.data?.data;
+}
+
+export async function getContentSettings() {
+  const response = await api.get("/site-settings/content");
+  return response.data?.data ?? defaultContentSettings;
+}
+
+export async function updateContentSettings(payload) {
+  const response = await api.put("/site-settings/content", payload);
   return response.data?.data;
 }

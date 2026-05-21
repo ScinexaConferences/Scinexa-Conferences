@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { conferences, faqs, testimonials } from "../data/mockData";
-import { ConferenceCard } from "../components/ConferenceCard";
+import { faqs, testimonials } from "../data/mockData";
 import { FaqList } from "../components/FaqList";
 import { NewsletterCard } from "../components/NewsletterCard";
 import { SectionHeading } from "../components/SectionHeading";
@@ -15,13 +14,8 @@ import { defaultCommitteeSettings } from "../data/committeeDefaults";
 import { defaultDownloadsSettings } from "../data/downloadsDefaults";
 import { defaultHomeHeroSettings } from "../data/homeHeroDefaults";
 import { defaultSpeakersSettings } from "../data/speakersDefaults";
-import { getAgendaSettings, getCommitteeSettings, getDownloadsSettings, getHomeHeroSettings, getSpeakersSettings } from "../services/siteSettingsService";
-
-const abstractHighlights = [
-  "Peer review-ready submission flow with topic tagging and author metadata.",
-  "Rapid review coordination for oral, poster, and workshop formats.",
-  "Automated communication touchpoints for decisions, revisions, and final uploads."
-];
+import { defaultContentSettings } from "../data/contentDefaults";
+import { getAgendaSettings, getCommitteeSettings, getContentSettings, getDownloadsSettings, getHomeHeroSettings, getSpeakersSettings } from "../services/siteSettingsService";
 
 function getCountdownParts(targetDate) {
   const target = new Date(targetDate).getTime();
@@ -87,11 +81,20 @@ export function HomePage() {
     initialData: defaultDownloadsSettings,
     staleTime: 30000
   });
+  const { data: contentSettings } = useQuery({
+    queryKey: ["content-settings"],
+    queryFn: getContentSettings,
+    initialData: defaultContentSettings,
+    staleTime: 30000
+  });
   const [countdown, setCountdown] = useState(() => getCountdownParts(defaultHomeHeroSettings.countdownTarget));
   const homepageAgendaDay = agendaSettings?.days?.[0] ?? defaultAgendaSettings.days[0];
   const homepageSpeakers = (speakersSettings?.speakers?.length ? speakersSettings.speakers : defaultSpeakersSettings.speakers).slice(0, 3);
   const homepageCommittee = (committeeSettings?.members?.length ? committeeSettings.members : defaultCommitteeSettings.members).slice(0, 3);
   const homepageDownloads = (downloadsSettings?.resources?.length ? downloadsSettings.resources : defaultDownloadsSettings.resources).slice(0, 3);
+  const aboutContent = contentSettings?.about ?? defaultContentSettings.about;
+  const sessionsContent = contentSettings?.sessions ?? defaultContentSettings.sessions;
+  const abstractContent = contentSettings?.abstractSection ?? defaultContentSettings.abstractSection;
 
   useEffect(() => {
     setCountdown(getCountdownParts(heroSettings.countdownTarget));
@@ -245,7 +248,7 @@ export function HomePage() {
 
               <div className="relative overflow-hidden rounded-[2.3rem] border border-black/5 bg-[#0b0818] shadow-[0_30px_80px_rgba(15,21,55,0.18)] dark:border-white/10">
                 <img
-                  src="https://images.unsplash.com/photo-1579165466741-7f35e4755660?auto=format&fit=crop&w=1200&q=80"
+                  src={aboutContent.image}
                   alt="Laboratory research and scientific collaboration visual"
                   className="h-[420px] w-full object-cover sm:h-[520px]"
                 />
@@ -253,9 +256,9 @@ export function HomePage() {
 
                 <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-7">
                   <div className="max-w-xs rounded-[1.6rem] border border-white/12 bg-white/10 p-4 text-white backdrop-blur-md">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#a8d8ff]">Host City</p>
-                    <p className="mt-2 font-display text-2xl font-bold">{heroSettings.locationText}</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-200">{heroSettings.dateText}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#a8d8ff]">{aboutContent.overlayLabel}</p>
+                    <p className="mt-2 font-display text-2xl font-bold">{aboutContent.overlayTitle || heroSettings.locationText}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-200">{aboutContent.overlaySubtitle || heroSettings.dateText}</p>
                   </div>
                 </div>
               </div>
@@ -268,30 +271,23 @@ export function HomePage() {
               transition={{ duration: 0.6, delay: 0.08 }}
             >
               <SectionHeading
-                eyebrow="About This Conference"
-                title="A sharper scientific meeting experience built for serious collaboration"
-                description="Inspired by premium congress layouts, this section frames the event as more than a registration page. It presents the conference as a destination for research exchange, practical insight, and long-tail professional relationships."
+                eyebrow={aboutContent.eyebrow}
+                title={aboutContent.title}
+                description={aboutContent.description}
               />
 
               <div className="mt-8 space-y-6 text-base leading-8 text-slate-600 dark:text-slate-300">
-                <p>
-                  {heroSettings.title} is designed to bring together clinicians, microbiologists, infectious disease
-                  specialists, and translational researchers in a setting that feels focused, credible, and globally
-                  connected.
-                </p>
-                <p>
-                  Across the program, delegates can move between keynote thinking, evidence-led breakout sessions,
-                  sponsor interaction, and peer conversations that carry useful ideas back into hospitals, laboratories,
-                  universities, and public health teams.
-                </p>
+                {aboutContent.paragraphs.map((paragraph) => (
+                  <p key={paragraph}>{paragraph.replace("3rd International Congress on Clinical Microbiology and Infectious Diseases", heroSettings.title)}</p>
+                ))}
               </div>
 
               <div className="mt-8">
                 <Link
-                  to="/about"
+                  to={aboutContent.ctaTo}
                   className="inline-flex items-center justify-center rounded-full bg-[#261038] px-7 py-3.5 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-[0_18px_34px_rgba(38,16,56,0.18)] transition hover:-translate-y-0.5 hover:bg-[#35124d]"
                 >
-                  Read More About
+                  {aboutContent.ctaLabel}
                 </Link>
               </div>
             </motion.div>
@@ -302,13 +298,36 @@ export function HomePage() {
       <section id="sessions" className="section-gap scroll-mt-32">
         <div className="page-shell">
           <SectionHeading
-            eyebrow="Sessions"
-            title="Featured conferences with sharper visual hierarchy"
-            description="These cards stay connected to your existing routes while the homepage now sets a much stronger conference-first tone."
+            eyebrow={sessionsContent.eyebrow}
+            title={sessionsContent.title}
+            description={sessionsContent.description}
           />
           <div className="mt-10 grid gap-6 lg:grid-cols-3">
-            {conferences.map((conference) => (
-              <ConferenceCard key={conference.id} conference={conference} />
+            {sessionsContent.sessions.slice(0, 3).map((session) => (
+              <article key={session.id} className="overflow-hidden rounded-[2rem] border border-[#dce4ff] bg-white shadow-[0_20px_60px_rgba(14,24,54,0.1)] dark:border-white/10 dark:bg-white/[0.05]">
+                <img src={session.image} alt={session.title} className="h-52 w-full object-cover" />
+                <div className="p-5">
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full border border-[#d7ccff] bg-[#f6f2ff] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#40337a]">
+                      {session.format}
+                    </span>
+                    <span className="rounded-full border border-[#d7ccff] bg-[#f6f2ff] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#40337a]">
+                      {session.track}
+                    </span>
+                  </div>
+                  <h3 className="mt-5 font-display text-[2rem] font-bold leading-tight text-[#1f2558] dark:text-white">{session.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">{session.description}</p>
+                  <div className="mt-6 flex items-center justify-between gap-4">
+                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#7f73bb]">{session.day}</span>
+                    <Link
+                      to={session.actionTo}
+                      className="inline-flex rounded-full bg-gradient-to-r from-[#5115d8] via-[#6f1dff] to-[#5a8cff] px-6 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(96,43,214,0.24)] transition hover:-translate-y-0.5"
+                    >
+                      {session.actionLabel}
+                    </Link>
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
         </div>
@@ -319,13 +338,12 @@ export function HomePage() {
           <div className="overflow-hidden rounded-[2.4rem] bg-[linear-gradient(135deg,#161039,#3d1f7e_54%,#225ea8)] px-6 py-8 text-white shadow-[0_28px_70px_rgba(22,16,57,0.25)] sm:px-10 lg:px-12">
             <div className="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#89d7ff]">Abstract</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#89d7ff]">{abstractContent.eyebrow}</p>
                 <h2 className="mt-4 font-display text-4xl font-bold leading-tight">
-                  Abstract submission needs to feel credible, simple, and fast.
+                  {abstractContent.title}
                 </h2>
                 <p className="mt-5 max-w-xl text-base leading-8 text-slate-100">
-                  This section mirrors the scientific-event experience delegates expect: clear deadlines, visible review
-                  pathways, and strong calls to action for authors and speakers.
+                  {abstractContent.description}
                 </p>
                 <Link
                   to="/abstract"
@@ -336,7 +354,7 @@ export function HomePage() {
               </div>
 
               <div className="grid gap-4">
-                {abstractHighlights.map((item) => (
+                {abstractContent.guidelines.slice(0, 3).map((item) => (
                   <article key={item} className="rounded-[1.7rem] border border-white/15 bg-white/10 p-5 backdrop-blur">
                     <p className="text-base leading-7 text-slate-100">{item}</p>
                   </article>

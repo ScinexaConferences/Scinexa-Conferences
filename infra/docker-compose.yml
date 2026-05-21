@@ -1,25 +1,17 @@
 version: "3.9"
 
 services:
-  mongo:
-    image: mongo:7
-    container_name: scinexa-mongo
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-
   api:
     build:
       context: ../apps/api
       dockerfile: Dockerfile
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      MONGODB_URI: mongodb://mongo:27017/scinexa_conferences
+      MONGODB_URI: ${MONGODB_URI:-mongodb://host.docker.internal:27017/scinexa_conferences}
       JWT_SECRET: change-this-super-secret-key-change-this-super-secret-key
     ports:
       - "8080:8080"
-    depends_on:
-      - mongo
 
   web:
     build:
@@ -29,7 +21,3 @@ services:
       - "3000:80"
     depends_on:
       - api
-
-
-volumes:
-  mongo_data:

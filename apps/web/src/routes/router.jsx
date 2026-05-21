@@ -22,7 +22,9 @@ import { SponsorPage } from "../pages/SponsorPage";
 import { Dashboard as AdminDashboard } from "../pages/admin/Dashboard";
 import { AgendaSectionEdit } from "../pages/admin/AgendaSectionEdit";
 import { HeroSectionEdit } from "../pages/admin/HeroSectionEdit";
+import { ManageAbstracts } from "../pages/admin/ManageAbstracts";
 import { ManageCommittee } from "../pages/admin/ManageCommittee";
+import { ManageContent } from "../pages/admin/ManageContent";
 import { ManageDownloads } from "../pages/admin/ManageDownloads";
 import { ManageRegistrations } from "../pages/admin/ManageRegistrations";
 import { ManageSpeakers } from "../pages/admin/ManageSpeakers";
@@ -71,6 +73,8 @@ export const router = createBrowserRouter([
           { path: "dashboard", element: <AdminDashboard /> },
           { path: "settings", element: <AdminSettings /> },
           { path: "hero-section", element: <HeroSectionEdit /> },
+          { path: "manage-abstracts", element: <ManageAbstracts /> },
+          { path: "manage-content", element: <ManageContent /> },
           { path: "agenda-edit", element: <AgendaSectionEdit /> },
           { path: "manage-speakers", element: <ManageSpeakers /> },
           { path: "manage-committee", element: <ManageCommittee /> },

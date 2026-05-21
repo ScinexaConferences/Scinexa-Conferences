@@ -3,6 +3,7 @@ package com.scinexa.conferences.bootstrap;
 import com.scinexa.conferences.user.entity.Role;
 import com.scinexa.conferences.user.entity.User;
 import com.scinexa.conferences.user.repository.UserRepository;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -60,7 +61,7 @@ public class DevAdminSeeder implements ApplicationRunner {
             updated = true;
         }
 
-        Set<Role> roles = new HashSet<>(user.getRoles());
+        Set<Role> roles = new HashSet<>(user.getRoles() == null ? Collections.emptySet() : user.getRoles());
         if (roles.add(Role.ADMIN)) {
             user.setRoles(roles);
             updated = true;

@@ -5,6 +5,7 @@ import { defaultCommitteeSettings } from "../../data/committeeDefaults";
 import { getCommitteeSettings, updateCommitteeSettings } from "../../services/siteSettingsService";
 import { getAuthErrorMessage } from "../../utils/auth";
 import { StatusToast } from "../modals/StatusToast";
+import { S3UploadField } from "./S3UploadField";
 
 function cloneDefaults() {
   return {
@@ -40,6 +41,7 @@ export function CommitteeSettingsForm() {
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [editingMemberIndex, setEditingMemberIndex] = useState(null);
   const [draftMember, setDraftMember] = useState(() => createEmptyMember());
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const { data } = useQuery({
     queryKey: ["committee-settings"],
@@ -328,16 +330,15 @@ export function CommitteeSettingsForm() {
                   </label>
                 </div>
 
-                <label className="block space-y-2">
-                  <span className="text-sm font-semibold">Image URL</span>
-                  <input
-                    type="url"
-                    value={draftMember.image}
-                    onChange={(event) => handleDraftChange("image", event.target.value)}
-                    className="w-full rounded-[1.1rem] border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[#6a3fff] focus:ring-4 focus:ring-[#e6dcff] dark:border-white/10 dark:bg-white/[0.04]"
-                    required
-                  />
-                </label>
+                <S3UploadField
+                  label="Committee image"
+                  value={draftMember.image}
+                  onChange={(value) => handleDraftChange("image", value)}
+                  category="profiles"
+                  placeholder="Paste an image URL or upload a committee photo"
+                  onUploadStateChange={setIsUploadingImage}
+                  required
+                />
 
                 <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                   <button
@@ -353,9 +354,10 @@ export function CommitteeSettingsForm() {
                   </button>
                   <button
                     type="submit"
+                    disabled={isUploadingImage}
                     className="inline-flex items-center justify-center rounded-full bg-[#241133] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(36,17,51,0.2)] transition hover:bg-[#34154b]"
                   >
-                    {editingMemberIndex === null ? "Add member" : "Save changes"}
+                    {isUploadingImage ? "Uploading..." : editingMemberIndex === null ? "Add member" : "Save changes"}
                   </button>
                 </div>
               </form>

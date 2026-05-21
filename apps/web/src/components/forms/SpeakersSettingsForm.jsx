@@ -5,6 +5,7 @@ import { defaultSpeakersSettings } from "../../data/speakersDefaults";
 import { getSpeakersSettings, updateSpeakersSettings } from "../../services/siteSettingsService";
 import { getAuthErrorMessage } from "../../utils/auth";
 import { StatusToast } from "../modals/StatusToast";
+import { S3UploadField } from "./S3UploadField";
 
 function cloneDefaults() {
   return {
@@ -42,6 +43,7 @@ export function SpeakersSettingsForm() {
   const [isSpeakerModalOpen, setIsSpeakerModalOpen] = useState(false);
   const [editingSpeakerIndex, setEditingSpeakerIndex] = useState(null);
   const [newSpeaker, setNewSpeaker] = useState(() => createEmptySpeaker());
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const { data } = useQuery({
     queryKey: ["speakers-settings"],
@@ -388,16 +390,15 @@ export function SpeakersSettingsForm() {
                   </label>
                 </div>
 
-                <label className="block space-y-2">
-                  <span className="text-sm font-semibold">Image URL</span>
-                  <input
-                    type="url"
-                    value={newSpeaker.image}
-                    onChange={(event) => handleNewSpeakerChange("image", event.target.value)}
-                    className="w-full rounded-[1.1rem] border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[#6a3fff] focus:ring-4 focus:ring-[#e6dcff] dark:border-white/10 dark:bg-white/[0.04]"
-                    required
-                  />
-                </label>
+                <S3UploadField
+                  label="Speaker image"
+                  value={newSpeaker.image}
+                  onChange={(value) => handleNewSpeakerChange("image", value)}
+                  category="speakers"
+                  placeholder="Paste an image URL or upload a speaker photo"
+                  onUploadStateChange={setIsUploadingImage}
+                  required
+                />
 
                 <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                   <button
@@ -413,9 +414,10 @@ export function SpeakersSettingsForm() {
                   </button>
                   <button
                     type="submit"
+                    disabled={isUploadingImage}
                     className="inline-flex items-center justify-center rounded-full bg-[#241133] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(36,17,51,0.2)] transition hover:bg-[#34154b]"
                   >
-                    {editingSpeakerIndex === null ? "Add speaker" : "Save changes"}
+                    {isUploadingImage ? "Uploading..." : editingSpeakerIndex === null ? "Add speaker" : "Save changes"}
                   </button>
                 </div>
               </form>

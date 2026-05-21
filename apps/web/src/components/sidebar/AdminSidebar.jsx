@@ -25,6 +25,27 @@ function HeroIcon() {
   );
 }
 
+function ContentIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.8">
+      <path d="M5 6.5h14M5 12h14M5 17.5h9" />
+      <rect x="3.5" y="4" width="17" height="16" rx="2.5" />
+    </svg>
+  );
+}
+
+function AbstractIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.8">
+      <path d="M7 5.5h10" />
+      <path d="M7 9.5h10" />
+      <path d="M7 13.5h6" />
+      <path d="M15 17.5h2.5l1.5-1.5" />
+      <rect x="4" y="3.5" width="16" height="17" rx="2" />
+    </svg>
+  );
+}
+
 function AgendaIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.8">
@@ -178,6 +199,22 @@ function SidebarContent({ isCollapsed, onCollapseToggle, onLogoutClick, onNaviga
           end
           label="Hero Section Edit"
           icon={<HeroIcon />}
+          onClick={onNavigate}
+        />
+        <SidebarLink
+          isCollapsed={isCollapsed}
+          to="/admin/manage-content"
+          end
+          label="Manage Content"
+          icon={<ContentIcon />}
+          onClick={onNavigate}
+        />
+        <SidebarLink
+          isCollapsed={isCollapsed}
+          to="/admin/manage-abstracts"
+          end
+          label="Manage Abstracts"
+          icon={<AbstractIcon />}
           onClick={onNavigate}
         />
         <SidebarLink

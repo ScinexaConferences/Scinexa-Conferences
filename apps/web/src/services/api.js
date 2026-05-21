@@ -3,9 +3,12 @@ import { store } from "../redux/store";
 import { logout } from "../redux/authSlice";
 import { isTokenExpired } from "../utils/jwt";
 
-export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "/api/v1"
-});
+function createApiClient(baseURL) {
+  return axios.create({ baseURL });
+}
+
+export const api = createApiClient(import.meta.env.VITE_API_URL ?? "/api/v1");
+export const fileApi = createApiClient(import.meta.env.VITE_FILE_API_URL ?? "/api");
 
 function dispatchAuthExpired() {
   store.dispatch(logout());
@@ -15,33 +18,38 @@ function dispatchAuthExpired() {
   }
 }
 
-api.interceptors.request.use((config) => {
-  const { auth } = store.getState();
+function attachAuthInterceptors(client) {
+  client.interceptors.request.use((config) => {
+    const { auth } = store.getState();
 
-  if (auth?.accessToken) {
-    if (isTokenExpired(auth.accessToken)) {
-      dispatchAuthExpired();
+    if (auth?.accessToken) {
+      if (isTokenExpired(auth.accessToken)) {
+        dispatchAuthExpired();
 
-      const sessionError = new Error("Session expired");
-      sessionError.code = "ERR_SESSION_EXPIRED";
+        const sessionError = new Error("Session expired");
+        sessionError.code = "ERR_SESSION_EXPIRED";
 
-      return Promise.reject(sessionError);
+        return Promise.reject(sessionError);
+      }
+
+      config.headers = config.headers ?? {};
+      config.headers.Authorization = `Bearer ${auth.accessToken}`;
     }
 
-    config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${auth.accessToken}`;
-  }
+    return config;
+  });
 
-  return config;
-});
+  client.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error?.response?.status === 401 && store.getState().auth.isAuthenticated) {
+        dispatchAuthExpired();
+      }
 
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error?.response?.status === 401 && store.getState().auth.isAuthenticated) {
-      dispatchAuthExpired();
+      return Promise.reject(error);
     }
+  );
+}
 
-    return Promise.reject(error);
-  }
-);
+attachAuthInterceptors(api);
+attachAuthInterceptors(fileApi);

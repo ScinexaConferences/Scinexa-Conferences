@@ -1,6 +1,7 @@
 package com.scinexa.conferences.common.exception;
 
 import com.scinexa.conferences.common.api.ApiResponse;
+import com.scinexa.conferences.file.exception.InvalidFileException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,6 +43,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Map<String, String>>> handleIllegalArgument(IllegalArgumentException exception) {
         return ResponseEntity.badRequest()
                 .body(ApiResponse.failure(exception.getMessage(), Map.of("error", "INVALID_REQUEST")));
+    }
+
+    @ExceptionHandler(InvalidFileException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleInvalidFile(InvalidFileException exception) {
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.failure(exception.getMessage(), Map.of("error", "INVALID_FILE")));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

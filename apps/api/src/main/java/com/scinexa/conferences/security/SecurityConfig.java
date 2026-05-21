@@ -37,12 +37,14 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/registrations").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/abstract-submissions").permitAll()
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/v1/conferences/**",
                                 "/api/v1/dashboard/public",
                                 "/api/v1/site-settings/home-hero",
                                 "/api/v1/site-settings/agenda",
+                                "/api/v1/site-settings/content",
                                 "/api/v1/site-settings/speakers",
                                 "/api/v1/site-settings/committee",
                                 "/api/v1/site-settings/downloads"

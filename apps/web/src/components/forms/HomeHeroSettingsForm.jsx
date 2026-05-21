@@ -5,6 +5,7 @@ import { defaultHomeHeroSettings } from "../../data/homeHeroDefaults";
 import { getHomeHeroSettings, updateHomeHeroSettings } from "../../services/siteSettingsService";
 import { getAuthErrorMessage } from "../../utils/auth";
 import { StatusToast } from "../modals/StatusToast";
+import { S3UploadField } from "./S3UploadField";
 
 function toDateTimeLocal(value) {
   if (!value) {
@@ -33,6 +34,7 @@ export function HomeHeroSettingsForm() {
   const [form, setForm] = useState(defaultHomeHeroSettings);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
+  const [isUploadingAsset, setIsUploadingAsset] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["home-hero-settings"],
@@ -276,12 +278,13 @@ export function HomeHeroSettingsForm() {
                       className="w-full rounded-[1.1rem] border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[#6a3fff] focus:ring-4 focus:ring-[#e6dcff] dark:border-white/10 dark:bg-white/[0.04]"
                       required
                     />
-                    <input
-                      type="text"
+                    <S3UploadField
+                      label={`Card ${index + 1} image`}
                       value={resource.image}
-                      onChange={(event) => handleResourceChange(index, "image", event.target.value)}
-                      placeholder="Image URL"
-                      className="w-full rounded-[1.1rem] border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[#6a3fff] focus:ring-4 focus:ring-[#e6dcff] dark:border-white/10 dark:bg-white/[0.04]"
+                      onChange={(value) => handleResourceChange(index, "image", value)}
+                      category="banners"
+                      placeholder="Paste an image URL or upload a hero card image"
+                      onUploadStateChange={setIsUploadingAsset}
                       required
                     />
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -320,10 +323,10 @@ export function HomeHeroSettingsForm() {
             </p>
             <button
               type="submit"
-              disabled={mutation.isPending || isLoading}
+              disabled={mutation.isPending || isLoading || isUploadingAsset}
               className="inline-flex min-w-[12rem] items-center justify-center rounded-full bg-gradient-to-r from-[#4f46ff] via-[#663dff] to-[#2fb6ff] px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-[0_20px_40px_rgba(79,70,255,0.28)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {mutation.isPending ? "Saving..." : "Save Hero Settings"}
+              {isUploadingAsset ? "Uploading..." : mutation.isPending ? "Saving..." : "Save Hero Settings"}
             </button>
           </div>
         </form>

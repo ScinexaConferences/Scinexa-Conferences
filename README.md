@@ -55,6 +55,38 @@ The backend expects:
 - `MONGODB_URI`
 - `JWT_SECRET`
 
+Default local MongoDB connection used in this repo:
+
+```text
+mongodb://localhost:27017/scinexa_conferences
+```
+
+If you want to use MongoDB Atlas, set `MONGODB_URI` explicitly before starting the backend:
+
+```bash
+export MONGODB_URI='mongodb+srv://<db-user>:<db-password>@<cluster-host>/scinexa_conferences?retryWrites=true&w=majority&tls=true&authSource=admin&appName=<cluster-name>'
+```
+
+Notes:
+
+- If your database password contains `@`, encode it as `%40` inside the Mongo URI.
+- Atlas must allow your current IP address in `Network Access`.
+- The Atlas database user must exist and have access to the cluster.
+- If Atlas still returns an SSL handshake error, verify the cluster is active and that your network/firewall is not blocking outbound TLS to MongoDB Atlas.
+
+### File uploads
+
+The admin content forms can upload images and documents through the backend S3 integration. Configure these before using upload buttons:
+
+```bash
+export AWS_REGION='ap-south-1'
+export AWS_BUCKET_NAME='your-s3-bucket-name'
+export AWS_ACCESS_KEY='your-access-key'
+export AWS_SECRET_KEY='your-secret-key'
+```
+
+If `AWS_ACCESS_KEY` and `AWS_SECRET_KEY` are omitted, the backend falls back to the default AWS credentials provider chain.
+
 ### Local development admin
 
 When the backend starts, it now seeds a local admin account by default.
