@@ -34,7 +34,7 @@ function toList(value, fallback) {
 }
 
 export const config = {
-  port: toNumber(process.env.PORT, 8080),
+  port: toNumber(process.env.PORT, 5000),
   mongodbUri: process.env.MONGODB_URI ?? "mongodb://localhost:27017/scinexa_conferences",
   jwtSecret: process.env.JWT_SECRET ?? "scinexa-dev-jwt-secret-key-please-change-2026",
   jwtAccessTokenExpirationMs: toNumber(process.env.JWT_ACCESS_TOKEN_EXPIRATION_MS, 3600000),

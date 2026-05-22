@@ -7,6 +7,6 @@ RUN npm install --omit=dev
 
 COPY server ./server
 
-EXPOSE 8080
+EXPOSE 5000
 
 CMD ["npm", "run", "start"]
