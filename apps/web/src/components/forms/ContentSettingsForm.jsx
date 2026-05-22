@@ -248,18 +248,24 @@ export function ContentSettingsForm() {
     setIsSessionModalOpen(true);
   };
 
-  const handleRemoveSession = (index) => {
-    setForm((current) => ({
-      ...current,
+  const handleRemoveSession = async (index) => {
+    const nextSessions = form.sessions.sessions.length > 1
+      ? form.sessions.sessions.filter((_, itemIndex) => itemIndex !== index)
+      : form.sessions.sessions;
+    const nextForm = {
+      ...form,
       sessions: {
-        ...current.sessions,
-        sessions: current.sessions.sessions.length > 1 ? current.sessions.sessions.filter((_, itemIndex) => itemIndex !== index) : current.sessions.sessions
+        ...form.sessions,
+        sessions: nextSessions
       }
-    }));
+    };
+
+    await mutation.mutateAsync(normalizePayload(nextForm));
+    setForm(nextForm);
     setError("");
   };
 
-  const handleSessionSubmit = (event) => {
+  const handleSessionSubmit = async (event) => {
     event.preventDefault();
 
     const normalizedSession = {
@@ -288,16 +294,20 @@ export function ContentSettingsForm() {
       return;
     }
 
-    setForm((current) => ({
-      ...current,
+    const nextSessions =
+      editingSessionIndex === null
+        ? [...form.sessions.sessions, normalizedSession]
+        : form.sessions.sessions.map((session, index) => (index === editingSessionIndex ? normalizedSession : session));
+    const nextForm = {
+      ...form,
       sessions: {
-        ...current.sessions,
-        sessions:
-          editingSessionIndex === null
-            ? [...current.sessions.sessions, normalizedSession]
-            : current.sessions.sessions.map((session, index) => (index === editingSessionIndex ? normalizedSession : session))
+        ...form.sessions,
+        sessions: nextSessions
       }
-    }));
+    };
+
+    await mutation.mutateAsync(normalizePayload(nextForm));
+    setForm(nextForm);
 
     setIsSessionModalOpen(false);
     setEditingSessionIndex(null);
@@ -420,6 +430,7 @@ export function ContentSettingsForm() {
               <button
                 type="button"
                 onClick={openAddSessionModal}
+                disabled={mutation.isPending}
                 className="inline-flex rounded-full border border-[#ddd7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#5124c7] transition hover:bg-[#f6f1ff] dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
               >
                 Add session
@@ -454,7 +465,7 @@ export function ContentSettingsForm() {
                     <div className="text-sm font-medium text-slate-700 dark:text-slate-200">{session.track}</div>
                     <div className="flex flex-wrap gap-3">
                       <button type="button" onClick={() => openEditSessionModal(index)} className="inline-flex rounded-full border border-[#ddd7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#5124c7] transition hover:bg-[#f6f1ff] dark:border-white/10 dark:bg-white/[0.04] dark:text-white">Edit</button>
-                      <button type="button" onClick={() => handleRemoveSession(index)} disabled={form.sessions.sessions.length === 1} className="inline-flex rounded-full border border-[#f4ccd6] bg-[#fff1f5] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#991f3d] transition hover:bg-[#ffe7ef] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#7a2940] dark:bg-[#461224] dark:text-[#ffdbe5]">Remove</button>
+                      <button type="button" onClick={() => void handleRemoveSession(index)} disabled={form.sessions.sessions.length === 1 || mutation.isPending} className="inline-flex rounded-full border border-[#f4ccd6] bg-[#fff1f5] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#991f3d] transition hover:bg-[#ffe7ef] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#7a2940] dark:bg-[#461224] dark:text-[#ffdbe5]">Remove</button>
                     </div>
                   </div>
                 ))}
@@ -570,7 +581,7 @@ export function ContentSettingsForm() {
                 {editingSessionIndex === null ? "Create a new session card" : "Update session content"}
               </h3>
               <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                The same session data will power the public sessions page and the homepage preview.
+                The same session data will power the public sessions page and the homepage preview, and will save to the website when you confirm.
               </p>
 
               <form onSubmit={handleSessionSubmit} className="mt-6 grid gap-4 lg:grid-cols-2">
@@ -598,8 +609,8 @@ export function ContentSettingsForm() {
 
                 <div className="flex justify-end gap-3 lg:col-span-2">
                   <button type="button" onClick={() => setIsSessionModalOpen(false)} className="inline-flex rounded-full border border-black/10 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-black/[0.03] dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/[0.05]">Cancel</button>
-                  <button type="submit" disabled={isUploadingAsset} className="inline-flex rounded-full bg-[#241133] px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.16em] text-white shadow-[0_18px_34px_rgba(36,17,51,0.2)] transition hover:-translate-y-0.5 hover:bg-[#34154b] disabled:cursor-not-allowed disabled:opacity-70">
-                    {isUploadingAsset ? "Uploading..." : editingSessionIndex === null ? "Add session" : "Save session"}
+                  <button type="submit" disabled={isUploadingAsset || mutation.isPending} className="inline-flex rounded-full bg-[#241133] px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.16em] text-white shadow-[0_18px_34px_rgba(36,17,51,0.2)] transition hover:-translate-y-0.5 hover:bg-[#34154b] disabled:cursor-not-allowed disabled:opacity-70">
+                    {isUploadingAsset ? "Uploading..." : mutation.isPending ? "Saving..." : editingSessionIndex === null ? "Add session" : "Save session"}
                   </button>
                 </div>
               </form>

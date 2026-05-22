@@ -45,6 +45,20 @@ function createDayId(label, index) {
   return normalized || `day-${index + 1}`;
 }
 
+function isAgendaFormComplete(form) {
+  return Boolean(form.days.length) && !form.days.some((day) =>
+    !day.label.trim() ||
+    day.items.some(
+      (item) =>
+        !item.time.trim() ||
+        !item.title.trim() ||
+        !item.room.trim() ||
+        !item.lead.trim() ||
+        !item.tag.trim()
+    )
+  );
+}
+
 export function AgendaSettingsForm() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(() => cloneDefaults());
@@ -95,6 +109,16 @@ export function AgendaSettingsForm() {
     }
   });
 
+  const persistAgendaIfValid = async (nextForm) => {
+    if (!isAgendaFormComplete(nextForm)) {
+      return false;
+    }
+
+    await mutation.mutateAsync(normalizePayload(nextForm));
+    setForm(nextForm);
+    return true;
+  };
+
   const handleDayLabelChange = (dayIndex, value) => {
     const previousDayId = form.days[dayIndex]?.id;
     const nextDayId = createDayId(value, dayIndex);
@@ -144,26 +168,21 @@ export function AgendaSettingsForm() {
   };
 
   const handleAddDay = (label) => {
-    setForm((current) => {
-      const nextIndex = current.days.length;
-      const nextLabel = label?.trim() || `Day ${nextIndex + 1}`;
-      const nextDayId = createDayId(nextLabel, nextIndex);
-
-      return {
-        ...current,
-        days: [
-          ...current.days,
-          {
-            id: nextDayId,
-            label: nextLabel,
-            items: [createEmptyAgendaItem()]
-          }
-        ]
-      };
-    });
     const nextIndex = form.days.length;
     const nextLabel = label?.trim() || `Day ${nextIndex + 1}`;
-    setActiveDayId(createDayId(nextLabel, nextIndex));
+    const nextDayId = createDayId(nextLabel, nextIndex);
+    setForm((current) => ({
+      ...current,
+      days: [
+        ...current.days,
+        {
+          id: nextDayId,
+          label: nextLabel,
+          items: [createEmptyAgendaItem()]
+        }
+      ]
+    }));
+    setActiveDayId(nextDayId);
     setError("");
   };
 
@@ -174,28 +193,26 @@ export function AgendaSettingsForm() {
     setIsAddDayModalOpen(false);
   };
 
-  const handleRemoveDay = (dayIndex) => {
+  const handleRemoveDay = async (dayIndex) => {
     const removedDayId = form.days[dayIndex]?.id;
     const fallbackDayId =
       form.days[dayIndex + 1]?.id ??
       form.days[dayIndex - 1]?.id ??
       form.days[0]?.id ??
       "";
+    const nextDays = form.days.length > 1 ? form.days.filter((_, index) => index !== dayIndex) : form.days;
+    const nextForm = { days: nextDays };
 
-    setForm((current) => ({
-      ...current,
-      days: current.days.length > 1 ? current.days.filter((_, index) => index !== dayIndex) : current.days
-    }));
+    await persistAgendaIfValid(nextForm);
     if (removedDayId === activeDayId && form.days.length > 1) {
       setActiveDayId(fallbackDayId);
     }
     setError("");
   };
 
-  const handleRemoveItem = (dayIndex, itemIndex) => {
-    setForm((current) => ({
-      ...current,
-      days: current.days.map((day, index) =>
+  const handleRemoveItem = async (dayIndex, itemIndex) => {
+    const nextForm = {
+      days: form.days.map((day, index) =>
         index === dayIndex
           ? {
               ...day,
@@ -203,7 +220,9 @@ export function AgendaSettingsForm() {
             }
           : day
       )
-    }));
+    };
+
+    await persistAgendaIfValid(nextForm);
     setError("");
   };
 
@@ -273,6 +292,7 @@ export function AgendaSettingsForm() {
                 setNewDayLabel(`Day ${form.days.length + 1}`);
                 setIsAddDayModalOpen(true);
               }}
+              disabled={mutation.isPending}
               className="inline-flex rounded-full border border-[#ddd7ff] bg-white px-5 py-2.5 text-sm font-semibold text-[#5124c7] transition hover:bg-[#f6f1ff] dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
             >
               Add day
@@ -329,6 +349,7 @@ export function AgendaSettingsForm() {
                     type="text"
                     value={activeDay.label}
                     onChange={(event) => handleDayLabelChange(selectedDayIndex, event.target.value)}
+                    onBlur={() => void persistAgendaIfValid(form)}
                     className="w-full rounded-[1.15rem] border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[#6a3fff] focus:ring-4 focus:ring-[#e6dcff] dark:border-white/10 dark:bg-white/[0.04]"
                     required
                   />
@@ -340,8 +361,8 @@ export function AgendaSettingsForm() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleRemoveDay(selectedDayIndex)}
-                    disabled={form.days.length === 1}
+                    onClick={() => void handleRemoveDay(selectedDayIndex)}
+                    disabled={form.days.length === 1 || mutation.isPending}
                     className="inline-flex rounded-full border border-[#f4ccd6] bg-[#fff1f5] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#991f3d] transition hover:bg-[#ffe7ef] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#7a2940] dark:bg-[#461224] dark:text-[#ffdbe5]"
                   >
                     Remove day
@@ -367,7 +388,8 @@ export function AgendaSettingsForm() {
                       </p>
                       <button
                         type="button"
-                        onClick={() => handleRemoveItem(selectedDayIndex, itemIndex)}
+                        onClick={() => void handleRemoveItem(selectedDayIndex, itemIndex)}
+                        disabled={mutation.isPending}
                         className="inline-flex rounded-full border border-[#f4ccd6] bg-[#fff1f5] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#991f3d] transition hover:bg-[#ffe7ef] dark:border-[#7a2940] dark:bg-[#461224] dark:text-[#ffdbe5]"
                       >
                         Remove
@@ -381,6 +403,7 @@ export function AgendaSettingsForm() {
                           type="text"
                           value={item.time}
                           onChange={(event) => handleItemChange(selectedDayIndex, itemIndex, "time", event.target.value)}
+                          onBlur={() => void persistAgendaIfValid(form)}
                           placeholder="08:00 AM"
                           className="w-full rounded-[1.1rem] border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[#6a3fff] focus:ring-4 focus:ring-[#e6dcff] dark:border-white/10 dark:bg-white/[0.04]"
                           required
@@ -393,6 +416,7 @@ export function AgendaSettingsForm() {
                           type="text"
                           value={item.title}
                           onChange={(event) => handleItemChange(selectedDayIndex, itemIndex, "title", event.target.value)}
+                          onBlur={() => void persistAgendaIfValid(form)}
                           placeholder="Opening keynote"
                           className="w-full rounded-[1.1rem] border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[#6a3fff] focus:ring-4 focus:ring-[#e6dcff] dark:border-white/10 dark:bg-white/[0.04]"
                           required
@@ -405,6 +429,7 @@ export function AgendaSettingsForm() {
                           type="text"
                           value={item.tag}
                           onChange={(event) => handleItemChange(selectedDayIndex, itemIndex, "tag", event.target.value)}
+                          onBlur={() => void persistAgendaIfValid(form)}
                           placeholder="Keynote"
                           className="w-full rounded-[1.1rem] border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[#6a3fff] focus:ring-4 focus:ring-[#e6dcff] dark:border-white/10 dark:bg-white/[0.04]"
                           required
@@ -419,6 +444,7 @@ export function AgendaSettingsForm() {
                           type="text"
                           value={item.room}
                           onChange={(event) => handleItemChange(selectedDayIndex, itemIndex, "room", event.target.value)}
+                          onBlur={() => void persistAgendaIfValid(form)}
                           placeholder="Grand Auditorium"
                           className="w-full rounded-[1.1rem] border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[#6a3fff] focus:ring-4 focus:ring-[#e6dcff] dark:border-white/10 dark:bg-white/[0.04]"
                           required
@@ -431,6 +457,7 @@ export function AgendaSettingsForm() {
                           type="text"
                           value={item.lead}
                           onChange={(event) => handleItemChange(selectedDayIndex, itemIndex, "lead", event.target.value)}
+                          onBlur={() => void persistAgendaIfValid(form)}
                           placeholder="Lead: Dr. Sarah Chen"
                           className="w-full rounded-[1.1rem] border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[#6a3fff] focus:ring-4 focus:ring-[#e6dcff] dark:border-white/10 dark:bg-white/[0.04]"
                           required
@@ -444,6 +471,7 @@ export function AgendaSettingsForm() {
               <button
                 type="button"
                 onClick={() => handleAddItem(selectedDayIndex)}
+                disabled={mutation.isPending}
                 className="mt-5 inline-flex rounded-full border border-[#ddd7ff] bg-white px-4 py-2.5 text-sm font-semibold text-[#5124c7] transition hover:bg-[#f6f1ff] dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
               >
                 Add agenda item
@@ -515,9 +543,10 @@ export function AgendaSettingsForm() {
                   </button>
                   <button
                     type="submit"
+                    disabled={mutation.isPending}
                     className="inline-flex items-center justify-center rounded-full bg-[#241133] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(36,17,51,0.2)] transition hover:bg-[#34154b]"
                   >
-                    Add day
+                    {mutation.isPending ? "Saving..." : "Add day"}
                   </button>
                 </div>
               </form>

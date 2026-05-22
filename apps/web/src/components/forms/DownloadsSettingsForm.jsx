@@ -101,15 +101,17 @@ export function DownloadsSettingsForm() {
     setDraftResource((current) => ({ ...current, [field]: value }));
   };
 
-  const handleRemoveResource = (index) => {
-    setForm((current) => ({
-      ...current,
-      resources: current.resources.length > 1 ? current.resources.filter((_, resourceIndex) => resourceIndex !== index) : current.resources
-    }));
+  const handleRemoveResource = async (index) => {
+    const nextResources = form.resources.length > 1
+      ? form.resources.filter((_, resourceIndex) => resourceIndex !== index)
+      : form.resources;
+
+    await mutation.mutateAsync(normalizePayload({ resources: nextResources }));
+    setForm({ resources: nextResources });
     setError("");
   };
 
-  const handleResourceSubmit = (event) => {
+  const handleResourceSubmit = async (event) => {
     event.preventDefault();
 
     const normalizedResource = {
@@ -131,13 +133,13 @@ export function DownloadsSettingsForm() {
       return;
     }
 
-    setForm((current) => ({
-      ...current,
-      resources:
-        editingResourceIndex === null
-          ? [...current.resources, normalizedResource]
-          : current.resources.map((resource, index) => (index === editingResourceIndex ? normalizedResource : resource))
-    }));
+    const nextResources =
+      editingResourceIndex === null
+        ? [...form.resources, normalizedResource]
+        : form.resources.map((resource, index) => (index === editingResourceIndex ? normalizedResource : resource));
+
+    await mutation.mutateAsync(normalizePayload({ resources: nextResources }));
+    setForm({ resources: nextResources });
 
     setEditingResourceIndex(null);
     resetDraftResource();
@@ -201,6 +203,7 @@ export function DownloadsSettingsForm() {
             <button
               type="button"
               onClick={openAddResourceModal}
+              disabled={mutation.isPending}
               className="inline-flex rounded-full border border-[#ddd7ff] bg-white px-5 py-2.5 text-sm font-semibold text-[#5124c7] transition hover:bg-[#f6f1ff] dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
             >
               Add resource
@@ -259,8 +262,8 @@ export function DownloadsSettingsForm() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleRemoveResource(index)}
-                      disabled={form.resources.length === 1}
+                      onClick={() => void handleRemoveResource(index)}
+                      disabled={form.resources.length === 1 || mutation.isPending}
                       className="inline-flex rounded-full border border-[#f4ccd6] bg-[#fff1f5] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#991f3d] transition hover:bg-[#ffe7ef] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#7a2940] dark:bg-[#461224] dark:text-[#ffdbe5]"
                     >
                       Remove
@@ -311,7 +314,7 @@ export function DownloadsSettingsForm() {
                 {editingResourceIndex === null ? "Create a new downloads card" : "Update downloads resource"}
               </h3>
               <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                Fill out the downloads details below. The row will update after you confirm.
+                Fill out the downloads details below. When you confirm, the website data will be updated immediately.
               </p>
 
               <form onSubmit={handleResourceSubmit} className="mt-6 space-y-5">
@@ -387,10 +390,16 @@ export function DownloadsSettingsForm() {
                   </button>
                   <button
                     type="submit"
-                    disabled={isUploadingImage}
+                    disabled={isUploadingImage || mutation.isPending}
                     className="inline-flex items-center justify-center rounded-full bg-[#241133] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(36,17,51,0.2)] transition hover:bg-[#34154b]"
                   >
-                    {isUploadingImage ? "Uploading..." : editingResourceIndex === null ? "Add resource" : "Save changes"}
+                    {isUploadingImage
+                      ? "Uploading..."
+                      : mutation.isPending
+                        ? "Saving..."
+                        : editingResourceIndex === null
+                          ? "Add resource"
+                          : "Save changes"}
                   </button>
                 </div>
               </form>
