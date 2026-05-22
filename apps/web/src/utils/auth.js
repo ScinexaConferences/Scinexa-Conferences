@@ -6,7 +6,7 @@ export function getAuthErrorMessage(error) {
   }
 
   if (error.code === "ERR_NETWORK" || !error.response) {
-    return `Cannot reach the API through ${api.defaults.baseURL}. Make sure the backend is running on port 8080, then restart the Vite frontend if you just changed the dev proxy.`;
+    return `Cannot reach the API through ${api.defaults.baseURL}. Make sure the backend is running and that apps/web/.env points to the correct backend URL.`;
   }
 
   const status = error.response?.status;

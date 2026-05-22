@@ -9,6 +9,7 @@ target/
 .env.*
 !.env.example
 !apps/api/.env.example
+!apps/web/.env.example
 coverage/
 .playwright-mcp/
 .data/

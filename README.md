@@ -85,6 +85,13 @@ You can configure the backend from either of these files:
 
 The API loads the repo root file first and then lets `apps/api/.env` override it when present. Docker Compose continues reading the repo root `.env`.
 
+The frontend uses Vite env variables from `apps/web/.env`:
+
+- `VITE_API_URL`
+- `VITE_FILE_API_URL`
+
+Update those whenever your backend URL changes. Because Vite injects these at build time, rebuild the frontend after changing them for Docker or production.
+
 ### File uploads
 
 All uploaded files now go to AWS S3, including:
