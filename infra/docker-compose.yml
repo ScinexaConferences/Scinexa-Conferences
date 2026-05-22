@@ -1,15 +1,29 @@
-version: "3.9"
-
 services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: ../apps/api
       dockerfile: Dockerfile
+    env_file:
+      - ../.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/scinexa_conferences
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    environment:
-      MONGODB_URI: ${MONGODB_URI:-mongodb://host.docker.internal:27017/scinexa_conferences}
-      JWT_SECRET: change-this-super-secret-key-change-this-super-secret-key
+    depends_on:
+      mongo:
+        condition: service_healthy
     ports:
       - "8080:8080"
 
@@ -21,3 +35,6 @@ services:
       - "3000:80"
     depends_on:
       - api
+
+volumes:
+  mongo-data:

@@ -12,7 +12,7 @@ The platform is structured as a reusable event engine rather than a single confe
 
 ```text
 apps/
-  api/   Spring Boot backend
+  api/   Node.js + Express backend
   web/   React frontend
 docs/    Architecture and database references
 infra/   Deployment assets
@@ -31,16 +31,16 @@ infra/   Deployment assets
 
 ## Backend architecture
 
-The API follows a layered pattern:
+The API is now organized around an Express service structure:
 
-- `controller`: request/response boundary
-- `service`: business logic
-- `repository`: persistence access
-- `dto`: API contracts
-- `entity`: MongoDB documents
-- `mapper`: MapStruct model translation
-- `common`: cross-cutting concerns like config, errors, and response wrappers
-- `security`: JWT and authorization
+- `server/index.js`: startup and Mongo bootstrap
+- `server/app.js`: route registration and middleware
+- `server/models.js`: Mongoose models
+- `server/auth.js`: JWT auth and role guards
+- `server/validators.js`: request validation
+- `server/storage.js`: S3 upload helpers
+- `server/defaults.js`: default CMS-style content payloads
+- `server/config.js`: env loading and runtime config
 
 ## Planned domain modules
 
@@ -90,4 +90,3 @@ The API follows a layered pattern:
 - networking/chat
 - live streaming and webinar integrations
 - PWA and mobile app surfaces
-

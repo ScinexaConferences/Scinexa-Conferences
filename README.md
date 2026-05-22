@@ -5,7 +5,7 @@ Scinexa Conferences is a monorepo scaffold for a premium conference discovery an
 ## What is included
 
 - `apps/web`: React + Vite + Tailwind frontend with public pages, dashboard shells, reusable components, theme switching, and mock content.
-- `apps/api`: Spring Boot 3 + Java 21 + MongoDB backend scaffold with JWT auth, conference APIs, admin-facing endpoints, Swagger, and layered architecture.
+- `apps/api`: Node.js + Express + MongoDB backend with JWT auth, conference APIs, admin-facing endpoints, file uploads, and layered route handling.
 - `docs`: architecture and MongoDB design notes for future implementation phases.
 - `infra`: Docker, nginx, and deployment helpers.
 
@@ -47,13 +47,15 @@ npm run dev:web
 ### Backend
 
 ```bash
-mvn -f apps/api/pom.xml spring-boot:run
+npm install
+npm run dev:api
 ```
 
 The backend expects:
 
 - `MONGODB_URI`
 - `JWT_SECRET`
+- `PORT`
 
 Default local MongoDB connection used in this repo:
 
@@ -61,7 +63,7 @@ Default local MongoDB connection used in this repo:
 mongodb://localhost:27017/scinexa_conferences
 ```
 
-If you want to use MongoDB Atlas, set `MONGODB_URI` explicitly before starting the backend:
+If you want to use MongoDB Atlas, set `MONGODB_URI` inside `.env` before starting the backend:
 
 ```bash
 export MONGODB_URI='mongodb+srv://<db-user>:<db-password>@<cluster-host>/scinexa_conferences?retryWrites=true&w=majority&tls=true&authSource=admin&appName=<cluster-name>'
@@ -74,9 +76,23 @@ Notes:
 - The Atlas database user must exist and have access to the cluster.
 - If Atlas still returns an SSL handshake error, verify the cluster is active and that your network/firewall is not blocking outbound TLS to MongoDB Atlas.
 
+### Environment file
+
+You can configure the backend from either of these files:
+
+- repo-wide: `.env`
+- backend-only override: `apps/api/.env`
+
+The API loads the repo root file first and then lets `apps/api/.env` override it when present. Docker Compose continues reading the repo root `.env`.
+
 ### File uploads
 
-The admin content forms can upload images and documents through the backend S3 integration. Configure these before using upload buttons:
+All uploaded files now go to AWS S3, including:
+
+- admin-managed images and documents
+- abstract submission attachments
+
+MongoDB stores only text content and file metadata records. Configure these before using upload buttons or abstract file submissions:
 
 ```bash
 export AWS_REGION='ap-south-1'
@@ -89,7 +105,7 @@ If `AWS_ACCESS_KEY` and `AWS_SECRET_KEY` are omitted, the backend falls back to 
 
 ### Local development admin
 
-When the backend starts, it now seeds a local admin account by default.
+When the backend starts, it seeds a local admin account by default.
 
 - Email: `admin@scinexa.local`
 - Password: `Admin@12345`

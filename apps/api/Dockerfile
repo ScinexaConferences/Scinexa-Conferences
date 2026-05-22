@@ -1,12 +1,12 @@
-FROM maven:3.9.9-eclipse-temurin-21 AS build
-WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn clean package -DskipTests
+FROM node:22-alpine
 
-FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /app/target/conference-platform-api-0.1.0.jar app.jar
+
+COPY package.json ./
+RUN npm install --omit=dev
+
+COPY server ./server
+
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
 
+CMD ["npm", "run", "start"]

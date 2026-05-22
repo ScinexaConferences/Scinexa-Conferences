@@ -2,13 +2,16 @@
   "name": "scinexa-conferences",
   "private": true,
   "workspaces": [
+    "apps/api",
     "apps/web"
   ],
   "scripts": {
     "dev:web": "npm --workspace apps/web run dev",
+    "dev:db": "bash scripts/start-local-mongo.sh",
     "build:web": "npm --workspace apps/web run build",
     "lint:web": "npm --workspace apps/web run lint",
-    "dev:api": "mvn -f apps/api/pom.xml spring-boot:run",
-    "build:api": "mvn -f apps/api/pom.xml clean package"
+    "dev:api": "npm --workspace apps/api run dev",
+    "build:api": "npm --workspace apps/api run build",
+    "start:api": "npm --workspace apps/api run start"
   }
 }
