@@ -3,17 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { SpeakerCard } from "../components/SpeakerCard";
 import { SectionHeading } from "../components/SectionHeading";
-import { defaultSpeakersSettings } from "../data/speakersDefaults";
 import { getSpeakersSettings } from "../services/siteSettingsService";
 
 export function SpeakersPage() {
   const { data } = useQuery({
     queryKey: ["speakers-settings"],
     queryFn: getSpeakersSettings,
-    initialData: defaultSpeakersSettings,
     staleTime: 30000
   });
-  const speakers = data?.speakers?.length ? data.speakers : defaultSpeakersSettings.speakers;
+  const speakers = Array.isArray(data?.speakers) ? data.speakers : [];
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(speakers.map((speaker) => speaker.category).filter(Boolean)))],
     [speakers]
@@ -54,18 +52,24 @@ export function SpeakersPage() {
           </div>
         </div>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          {filteredSpeakers.map((speaker, index) => (
-            <motion.div
-              key={speaker.name}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.26, delay: Math.min(index * 0.04, 0.28) }}
-            >
-            <SpeakerCard key={speaker.name} speaker={speaker} />
-            </motion.div>
-          ))}
-        </div>
+        {filteredSpeakers.length ? (
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            {filteredSpeakers.map((speaker, index) => (
+              <motion.div
+                key={speaker.name}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.26, delay: Math.min(index * 0.04, 0.28) }}
+              >
+                <SpeakerCard key={speaker.name} speaker={speaker} />
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-10 rounded-[1.8rem] border border-[#dce8ff] bg-white/92 px-6 py-10 text-center text-sm text-slate-500 shadow-[0_16px_38px_rgba(15,24,58,0.08)] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+            No speakers are published yet.
+          </div>
+        )}
       </div>
     </section>
   );

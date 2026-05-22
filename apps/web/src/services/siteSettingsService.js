@@ -28,7 +28,7 @@ export async function updateAgendaSettings(payload) {
 
 export async function getSpeakersSettings() {
   const response = await api.get("/site-settings/speakers");
-  return response.data?.data ?? defaultSpeakersSettings;
+  return response.data?.data;
 }
 
 export async function updateSpeakersSettings(payload) {

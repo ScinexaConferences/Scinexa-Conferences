@@ -13,6 +13,10 @@ function cloneDefaults() {
   };
 }
 
+function createEmptyForm() {
+  return { speakers: [] };
+}
+
 function createEmptySpeaker() {
   return {
     name: "",
@@ -37,7 +41,7 @@ function normalizePayload(form) {
 
 export function SpeakersSettingsForm() {
   const queryClient = useQueryClient();
-  const [form, setForm] = useState(() => cloneDefaults());
+  const [form, setForm] = useState(() => createEmptyForm());
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   const [isSpeakerModalOpen, setIsSpeakerModalOpen] = useState(false);
@@ -48,13 +52,16 @@ export function SpeakersSettingsForm() {
   const { data } = useQuery({
     queryKey: ["speakers-settings"],
     queryFn: getSpeakersSettings,
-    initialData: defaultSpeakersSettings,
     staleTime: 30000
   });
 
   useEffect(() => {
+    if (!Array.isArray(data?.speakers)) {
+      return;
+    }
+
     setForm({
-      speakers: (data?.speakers?.length ? data.speakers : defaultSpeakersSettings.speakers).map((speaker) => ({
+      speakers: data.speakers.map((speaker) => ({
         ...speaker
       }))
     });
@@ -234,6 +241,11 @@ export function SpeakersSettingsForm() {
             </div>
 
             <div className="divide-y divide-black/5 dark:divide-white/10">
+              {!form.speakers.length ? (
+                <div className="px-5 py-10 text-center text-sm text-slate-500 dark:text-slate-300">
+                  No speakers have been saved yet. Add one to publish it to the website.
+                </div>
+              ) : null}
               {form.speakers.map((speaker, index) => (
                 <div
                   key={`${speaker.name}-${index}`}

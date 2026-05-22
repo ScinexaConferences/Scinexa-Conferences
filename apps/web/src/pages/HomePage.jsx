@@ -66,7 +66,6 @@ export function HomePage() {
   const { data: speakersSettings } = useQuery({
     queryKey: ["speakers-settings"],
     queryFn: getSpeakersSettings,
-    initialData: defaultSpeakersSettings,
     staleTime: 30000
   });
   const { data: committeeSettings } = useQuery({
@@ -89,7 +88,7 @@ export function HomePage() {
   });
   const [countdown, setCountdown] = useState(() => getCountdownParts(defaultHomeHeroSettings.countdownTarget));
   const homepageAgendaDay = agendaSettings?.days?.[0] ?? defaultAgendaSettings.days[0];
-  const homepageSpeakers = (speakersSettings?.speakers?.length ? speakersSettings.speakers : defaultSpeakersSettings.speakers).slice(0, 3);
+  const homepageSpeakers = (Array.isArray(speakersSettings?.speakers) ? speakersSettings.speakers : []).slice(0, 3);
   const homepageCommittee = (committeeSettings?.members?.length ? committeeSettings.members : defaultCommitteeSettings.members).slice(0, 3);
   const homepageDownloads = (downloadsSettings?.resources?.length ? downloadsSettings.resources : defaultDownloadsSettings.resources).slice(0, 3);
   const aboutContent = contentSettings?.about ?? defaultContentSettings.about;

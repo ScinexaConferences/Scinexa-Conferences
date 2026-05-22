@@ -18,11 +18,10 @@ export function ConferenceDetailsPage() {
   const { data: speakersSettings } = useQuery({
     queryKey: ["speakers-settings"],
     queryFn: getSpeakersSettings,
-    initialData: defaultSpeakersSettings,
     staleTime: 30000
   });
   const agendaSnapshot = (agendaSettings?.days?.[0]?.items ?? defaultAgendaSettings.days[0].items).slice(0, 4);
-  const featuredSpeakers = (speakersSettings?.speakers?.length ? speakersSettings.speakers : defaultSpeakersSettings.speakers).slice(0, 3);
+  const featuredSpeakers = (Array.isArray(speakersSettings?.speakers) ? speakersSettings.speakers : []).slice(0, 3);
 
   return (
     <section className="section-gap">
