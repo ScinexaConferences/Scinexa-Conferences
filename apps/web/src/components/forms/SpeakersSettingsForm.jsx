@@ -86,24 +86,6 @@ export function SpeakersSettingsForm() {
     return Array.from(new Set(["Key Note", "Speakers", "Poster", "Virtual", "Delegate", ...values]));
   }, [form.speakers]);
 
-  const handleAddSpeaker = (speaker) => {
-    setForm((current) => ({
-      ...current,
-      speakers: [...current.speakers, speaker]
-    }));
-    setError("");
-  };
-
-  const handleUpdateSpeaker = (index, speaker) => {
-    setForm((current) => ({
-      ...current,
-      speakers: current.speakers.map((currentSpeaker, currentIndex) =>
-        currentIndex === index ? speaker : currentSpeaker
-      )
-    }));
-    setError("");
-  };
-
   const handleNewSpeakerChange = (field, value) => {
     setNewSpeaker((current) => ({ ...current, [field]: value }));
   };
@@ -126,7 +108,7 @@ export function SpeakersSettingsForm() {
     setError("");
   };
 
-  const handleAddSpeakerSubmit = (event) => {
+  const handleAddSpeakerSubmit = async (event) => {
     event.preventDefault();
 
     const normalizedSpeaker = {
@@ -148,10 +130,19 @@ export function SpeakersSettingsForm() {
       return;
     }
 
+    const nextSpeakers = editingSpeakerIndex === null
+      ? [...form.speakers, normalizedSpeaker]
+      : form.speakers.map((currentSpeaker, currentIndex) =>
+          currentIndex === editingSpeakerIndex ? normalizedSpeaker : currentSpeaker
+        );
+
+    await mutation.mutateAsync(normalizePayload({ speakers: nextSpeakers }));
+    setForm({ speakers: nextSpeakers });
+
     if (editingSpeakerIndex === null) {
-      handleAddSpeaker(normalizedSpeaker);
+      setToast("Speaker added successfully.");
     } else {
-      handleUpdateSpeaker(editingSpeakerIndex, normalizedSpeaker);
+      setToast("Speaker updated successfully.");
     }
 
     resetNewSpeaker();
@@ -159,11 +150,14 @@ export function SpeakersSettingsForm() {
     setIsSpeakerModalOpen(false);
   };
 
-  const handleRemoveSpeaker = (index) => {
-    setForm((current) => ({
-      ...current,
-      speakers: current.speakers.length > 1 ? current.speakers.filter((_, speakerIndex) => speakerIndex !== index) : current.speakers
-    }));
+  const handleRemoveSpeaker = async (index) => {
+    const nextSpeakers = form.speakers.length > 1
+      ? form.speakers.filter((_, speakerIndex) => speakerIndex !== index)
+      : form.speakers;
+
+    await mutation.mutateAsync(normalizePayload({ speakers: nextSpeakers }));
+    setForm({ speakers: nextSpeakers });
+    setToast("Speaker removed successfully.");
     setError("");
   };
 
@@ -223,6 +217,7 @@ export function SpeakersSettingsForm() {
             <button
               type="button"
               onClick={openAddSpeakerModal}
+              disabled={mutation.isPending}
               className="inline-flex rounded-full border border-[#ddd7ff] bg-white px-5 py-2.5 text-sm font-semibold text-[#5124c7] transition hover:bg-[#f6f1ff] dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
             >
               Add speaker
@@ -282,8 +277,8 @@ export function SpeakersSettingsForm() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleRemoveSpeaker(index)}
-                      disabled={form.speakers.length === 1}
+                      onClick={() => void handleRemoveSpeaker(index)}
+                      disabled={form.speakers.length === 1 || mutation.isPending}
                       className="inline-flex rounded-full border border-[#f4ccd6] bg-[#fff1f5] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#991f3d] transition hover:bg-[#ffe7ef] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#7a2940] dark:bg-[#461224] dark:text-[#ffdbe5]"
                     >
                       Remove
@@ -340,7 +335,7 @@ export function SpeakersSettingsForm() {
                 {editingSpeakerIndex === null ? "Create a new speaker card" : "Update speaker details"}
               </h3>
               <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                Fill out the speaker details below. The row will be updated in the managed speakers list after you confirm.
+                Fill out the speaker details below. When you confirm, the speaker entry will be saved to the website immediately.
               </p>
 
               <form onSubmit={handleAddSpeakerSubmit} className="mt-6 space-y-5">
@@ -414,10 +409,16 @@ export function SpeakersSettingsForm() {
                   </button>
                   <button
                     type="submit"
-                    disabled={isUploadingImage}
+                    disabled={isUploadingImage || mutation.isPending}
                     className="inline-flex items-center justify-center rounded-full bg-[#241133] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(36,17,51,0.2)] transition hover:bg-[#34154b]"
                   >
-                    {isUploadingImage ? "Uploading..." : editingSpeakerIndex === null ? "Add speaker" : "Save changes"}
+                    {isUploadingImage
+                      ? "Uploading..."
+                      : mutation.isPending
+                        ? "Saving..."
+                        : editingSpeakerIndex === null
+                          ? "Add speaker"
+                          : "Save changes"}
                   </button>
                 </div>
               </form>
